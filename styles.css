@@ -721,6 +721,16 @@ p {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 234, 220, 0.68));
   padding: 1.75rem;
 }
+.sponsor-logo {
+  display: block;
+  width: min(100%, 280px);
+  height: auto;
+  margin: 0 auto 1.1rem;
+}
+.sponsor-card .button,
+.sponsor-card .btn {
+  margin-top: 0.35rem;
+}
 .note-box {
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.78);
