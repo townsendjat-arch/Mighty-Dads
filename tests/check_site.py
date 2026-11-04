@@ -74,6 +74,10 @@ class SiteChecks(unittest.TestCase):
                             ids = [a.get('id') for t, a in PAGES[target.name].nodes]
                             self.assertIn(unquote(url.fragment), ids)
 
+    def test_unverified_circle_of_fathers_is_not_linked(self):
+        links = [a.get('href', '') for t, a in PAGES['resources.html'].nodes if t == 'a']
+        self.assertFalse(any('parentsthrive.org' in link for link in links))
+
     def test_stale_promises_are_removed(self):
         for page in PAGES.values():
             self.assertNotIn('weekly', page.path.read_text().lower())
