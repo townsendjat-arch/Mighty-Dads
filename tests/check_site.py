@@ -13,17 +13,30 @@ class Page(HTMLParser):
         super().__init__()
         self.path, self.nodes, self.navigation = path, [], []
         self.in_nav = False
+        self.blocks, self.block_stack = [], []
         self.feed(path.read_text())
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
         self.nodes.append((tag, attrs))
+        if tag in ['section', 'article'] or (tag == 'div' and 'card-grid' in attrs.get('class', '').split()):
+            block = {'tag': tag, 'attrs': attrs, 'text': ''}
+            self.blocks.append(block)
+            self.block_stack.append(block)
+        elif self.block_stack and tag == 'div':
+            self.block_stack.append({'tag': tag, 'attrs': attrs, 'text': ''})
         if tag == 'nav' and attrs.get('class') == 'site-nav':
             self.in_nav = True
         elif tag == 'a' and self.in_nav:
             self.navigation.append(attrs)
 
+    def handle_data(self, data):
+        for block in self.block_stack:
+            block['text'] += data
+
     def handle_endtag(self, tag):
+        if self.block_stack and self.block_stack[-1]['tag'] == tag:
+            self.block_stack.pop()
         if tag == 'nav':
             self.in_nav = False
 
@@ -73,6 +86,29 @@ class SiteChecks(unittest.TestCase):
                         if url.fragment and target.suffix == '.html':
                             ids = [a.get('id') for t, a in PAGES[target.name].nodes]
                             self.assertIn(unquote(url.fragment), ids)
+
+    def test_contact_and_newsletter_are_separate(self):
+        for name in ['events.html', 'dad-groups.html']:
+            with self.subTest(page=name):
+                links = [a.get('href') for t, a in PAGES[name].nodes if t == 'a']
+                self.assertEqual(links.count('mailto:jason@mightydads.org'), 1)
+                self.assertIn('newsletter.html', links)
+                self.assertIn('https://mightydads.beehiiv.com/subscribe', links)
+                self.assertIn('>Contact Jason</a>', PAGES[name].path.read_text())
+
+    def test_accessibility_structure_and_nonempty_sections(self):
+        for name, page in PAGES.items():
+            with self.subTest(page=name):
+                self.assertTrue(any(t == 'html' and a.get('lang') == 'en' for t, a in page.nodes))
+                self.assertTrue(any(t == 'nav' and a.get('aria-label') for t, a in page.nodes))
+                previous_level = 0
+                for tag, attrs in page.nodes:
+                    if tag in ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']:
+                        level = int(tag[1])
+                        self.assertLessEqual(level, previous_level + 1, f'{name}: heading skips to {tag}')
+                        previous_level = level
+                for block in page.blocks:
+                    self.assertTrue(block['text'].strip(), f'{name}: empty {block["tag"]} {block["attrs"]}')
 
     def test_unverified_circle_of_fathers_is_not_linked(self):
         links = [a.get('href', '') for t, a in PAGES['resources.html'].nodes if t == 'a']
