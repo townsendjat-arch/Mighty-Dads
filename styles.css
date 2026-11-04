@@ -17,6 +17,26 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+/* Keep keyboard navigation clear without changing the site's visual identity. */
+:focus-visible {
+  outline: 3px solid var(--accent-2);
+  outline-offset: 4px;
+}
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: var(--text);
+  color: #fff;
+  transform: translateY(-160%);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+[id] { scroll-margin-top: 10rem; }
 body {
   margin: 0;
   font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -80,6 +100,9 @@ p {
   align-items: center;
 }
 .site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   text-decoration: none;
   color: var(--muted);
   font-weight: 600;
@@ -87,6 +110,11 @@ p {
 .site-nav a:hover,
 .site-nav a:focus-visible {
   color: var(--text);
+}
+.site-nav a[aria-current="page"] {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
 }
 
 .home .site-header {
@@ -178,6 +206,12 @@ p {
   font-weight: 700;
   border: 1px solid transparent;
   transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+.btn,
+.button {
+  max-width: 100%;
+  text-align: center;
+  overflow-wrap: anywhere;
 }
 .button.primary {
   background: var(--accent);
@@ -775,6 +809,11 @@ p {
 .site-footer a:focus-visible { color: var(--text); }
 
 @media (max-width: 900px) {
+  .site-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.9rem;
+  }
   .hero-grid,
   .card-grid,
   .card-grid.two,
@@ -796,7 +835,20 @@ p {
   .photo-block { min-height: 360px; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .button,
+  .city-jump-link { transition: none; }
+  .btn:hover,
+  .btn:focus-visible,
+  .button:hover,
+  .button:focus-visible,
+  .city-jump-link:hover,
+  .city-jump-link:focus-visible { transform: none; }
+}
+
 @media (max-width: 760px) {
+  [id] { scroll-margin-top: 15rem; }
   .home .site-header {
     width: min(100% - 1.25rem, var(--max));
     flex-wrap: wrap;
@@ -848,6 +900,7 @@ p {
 }
 
 @media (max-width: 560px) {
+  [id] { scroll-margin-top: 1rem; }
   html,
   body {
     overflow-x: hidden;
