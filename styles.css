@@ -1029,6 +1029,8 @@ p {
 .fep-feed-actions [hidden] { display: none; }
 .gathering-card { display: flex; flex-direction: column; gap: 0.8rem; background: var(--surface-warm); }
 .gathering-card p { margin: 0; }
+.events-jump-links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-top: 1.5rem; }
+.events-jump-links a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 700; text-underline-offset: 0.2em; }
 @media (max-width: 1050px) {
   .fep-event-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

@@ -14,6 +14,9 @@ const section = '[data-fep-events]';
 const cards = section + ' [data-event-grid] [data-event-id]';
 const gathers = '[data-gatherings]';
 const results = [], failures = [], baselineAxe = [];
+// Capture-only visibility preserves geometry while preventing fixed navigation
+// from overlaying the cropped section image. No runtime CSS or image edits.
+const sectionCaptureStyle = '.site-header, .skip-link { visibility: hidden !important; }';
 const viewports = [{width:320,height:740},{width:390,height:844},{width:1440,height:1000}];
 const mime = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.png':'image/png','.svg':'image/svg+xml','.jpg':'image/jpeg'};
 const server = http.createServer((request, response) => {
@@ -123,20 +126,38 @@ async function layoutBounds(page, width, selector) {
         const axe=await new AxeBuilder({page}).include(section).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
         fs.writeFileSync(path.join(output,`${engine}-${file}-axe-${viewport.width}.json`),JSON.stringify(axe.violations,null,2));
         assert.deepEqual(axe.violations.map(item=>({id:item.id,nodes:item.nodes.length})),[]);
-        await page.locator(section).screenshot({path:path.join(output,`${engine}-${file}-community-${viewport.width}.png`)});
+        await page.locator(section).screenshot({path:path.join(output,`${engine}-${file}-community-${viewport.width}.png`),style:sectionCaptureStyle});
         if(file==='events.html') {
           assert.equal(await visibleGatherings(page).count(),2);
           await layoutBounds(page,viewport.width,gathers+' [data-gathering-id]');
           const gatheringAxe=await new AxeBuilder({page}).include(gathers).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
           assert.deepEqual(gatheringAxe.violations.map(item=>({id:item.id,nodes:item.nodes.length})),[]);
-          await page.locator(gathers).screenshot({path:path.join(output,`${engine}-gatherings-${viewport.width}.png`)});
+          await page.locator(gathers).screenshot({path:path.join(output,`${engine}-gatherings-${viewport.width}.png`),style:sectionCaptureStyle});
         }
+        await page.evaluate(()=>window.scrollTo({top:0,left:0,behavior:'instant'}));
+        await page.waitForFunction(()=>window.scrollY===0);
         await page.screenshot({path:path.join(output,`${engine}-${file}-full-${viewport.width}.png`),fullPage:true});
         const full=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
         baselineAxe.push({page:file,width:viewport.width,violations:full.violations});
         assert.equal(requests.filter(request=>request.url===FEED_URL).length,1);
       }));
     }
+  }
+  for(const viewport of viewports) {
+    await run(`${viewport.width}: Events hero links jump by keyboard to visible, focused headings`,()=>using({data:real,viewport},async({page})=>{
+      await page.goto(origin+'/events.html');await settled(page);
+      for(const id of ['community-event-heading','gatherings-heading']) {
+        const link=page.locator('.page-hero a[href="#'+id+'"]');assert.equal(await link.count(),1);
+        await link.focus();await page.keyboard.press('Enter');await page.waitForFunction(id=>location.hash==='#'+id,id);
+        assert.equal(await page.evaluate(()=>document.activeElement.id),id,'Keyboard focus follows the jump target');
+        // Let native smooth scrolling settle; compact mobile headers are static.
+        await page.waitForFunction(id=>{
+          const target=document.getElementById(id).getBoundingClientRect();
+          const header=document.querySelector('.site-header').getBoundingClientRect();
+          return target.top>=Math.max(0,header.bottom)-1 && target.bottom<=innerHeight;
+        },id);
+      }
+    }));
   }
   await run('synthetic feed sorts, deduplicates and caps homepage at three / Events at five',()=>using({data:feed([...manyEvents().reverse(),manyEvents()[0]])},async({page})=>{
     for(const [file,limit] of [['index.html',3],['events.html',5]]) {await page.goto(origin+'/'+file);await count(page,limit);assert.deepEqual(await ids(page),manyEvents().slice(0,limit).map(item=>item.id));}
