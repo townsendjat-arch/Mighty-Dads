@@ -37,7 +37,7 @@ async function fallback(page) {
   assert.ok(await link.isVisible(), 'Static FindEveryPark fallback is available');
   assert.ok((await link.textContent()).trim());
 }
-async function newPage({data = feed(), viewport = viewports[1], mode = 'ok', now = NOW, javaScriptEnabled = true, timeZone = 'America/Denver', transformHTML = null} = {}) {
+async function newPage({data = feed(), viewport = viewports[1], mode = 'ok', now = NOW, javaScriptEnabled = true, timeZone = 'America/Denver', transformHTML = null, fixedTime = false} = {}) {
   const context = await browser.newContext({viewport, timezoneId:timeZone, javaScriptEnabled});
   const page = await context.newPage();
   page.setDefaultTimeout(8000);
@@ -45,7 +45,11 @@ async function newPage({data = feed(), viewport = viewports[1], mode = 'ok', now
   let currentData = data, currentMode = mode, hits = 0; const pendingResponses = [];
   await context.addCookies([{name:'review-only-sentinel',value:'not-a-real-cookie',domain:'findeverypark.com',path:'/',secure:true,sameSite:'None'}]);
   page.on('pageerror', error => errors.push(error.message));
-  if (javaScriptEnabled) await page.clock.install({time:new Date(now)});
+  if (javaScriptEnabled) {
+    await page.clock.install({time:new Date(now)});
+    // Exact-boundary scenarios must not drift across end−1ms during navigation.
+    if(fixedTime) await page.clock.setFixedTime(new Date(now));
+  }
   await context.route('**/*', async route => {
     const request = route.request(); const url = request.url();
     requests.push({url,method:request.method(),type:request.resourceType()});
@@ -73,7 +77,14 @@ async function run(name, fn) {
 }
 async function using(options, fn) {
   const env=await newPage(options);
-  try { await fn(env); assert.deepEqual(env.unexpected, [], 'No external scripts, organizers, signup or analytics requests'); assert.deepEqual(env.errors, [], 'No uncaught JavaScript errors'); }
+  try {
+    await fn(env);
+    assert.deepEqual(env.unexpected, [], 'No external scripts, organizers, signup or analytics requests');
+    // WebKit reports its expected browser-level CORS rejection as pageerror even
+    // though the application catches fetch rejection and displays the fallback.
+    const runtimeErrors=env.errors.filter(message=>!(engine==='webkit' && options.mode==='cors' && /^\/findeverypark\.com\/data\/events\/community-feed\.v1\.json due to access control checks\.$/.test(message)));
+    assert.deepEqual(runtimeErrors, [], 'No uncaught JavaScript errors');
+  }
   catch(error) { try { await env.page.screenshot({path:path.join(output,engine+'-failure-'+(failures.length+1)+'.png'),fullPage:true}); } catch(_) {} throw error; }
   finally { await env.context.close(); }
 }
@@ -156,15 +167,20 @@ async function layoutBounds(page, width, selector) {
     assert.ok((await page.locator(cards).textContent()).includes('<img src=x onerror="window.__injected=1">'));
     assert.equal(await page.evaluate(()=>window.__injected),undefined);await fallback(page);
   }));
+  await run('missing-organizer source fallback is labeled as the FindEveryPark calendar',()=>using({data:feed([event('source-fallback',{href:'https://findeverypark.com/events.html'})])},async({page})=>{
+    await page.goto(origin+'/events.html');await count(page,1);const source=page.locator(cards+' a');
+    assert.equal(await source.textContent(),'FindEveryPark calendar');assert.equal(await source.getAttribute('href'),'https://findeverypark.com/events.html');
+    assert.doesNotMatch(await source.getAttribute('aria-label') || '',/Organizer details/);
+  }));
   await run('long unbroken feed text fits the narrowest viewport',()=>using({viewport:viewports[0],data:feed([event('long-text',{title:'X'.repeat(120),description:'Y'.repeat(240)})])},async({page})=>{
     await page.goto(origin+'/events.html');await count(page,1);await layoutBounds(page,320,cards);
   }));
-  await run('exact timed expiry works before/at end and in an already open page',()=>using({data:feed([event('timed',{expiresAt:'2026-11-05T12:01:00.000Z',dateEnd:'2026-11-05T12:01:00.000Z',dateStart:'2026-11-05T11:00:00.000Z',sortAt:'2026-11-05T11:00:00.000Z'})]),now:'2026-11-05T12:00:59.999Z'},async({page})=>{
+  await run('exact timed expiry works before/at end and in an already open page',()=>using({data:feed([event('timed',{expiresAt:'2026-11-05T12:01:00.000Z',dateEnd:'2026-11-05T12:01:00.000Z',dateStart:'2026-11-05T11:00:00.000Z',sortAt:'2026-11-05T11:00:00.000Z'})]),now:'2026-11-05T12:00:59.999Z',fixedTime:true},async({page})=>{
     await page.goto(origin+'/events.html');await count(page,1);
     await page.clock.setFixedTime(new Date('2026-11-05T12:01:00.000Z'));await page.clock.fastForward(60001);await count(page,0);await fallback(page);
     await page.reload();await settled(page);await count(page,0);
   }));
-  await run('date-only expiry is next Mountain midnight, independent of viewer timezone',()=>using({data:feed([event('date-only',{dateStart:'2026-11-20',dateEnd:'',sortAt:'2026-11-20T07:00:00.000Z',expiresAt:'2026-11-21T07:00:00.000Z',timeLabel:'Time not published'})]),now:'2026-11-21T06:59:59.999Z',timeZone:'Asia/Tokyo'},async({page})=>{
+  await run('date-only expiry is next Mountain midnight, independent of viewer timezone',()=>using({data:feed([event('date-only',{dateStart:'2026-11-20',dateEnd:'',sortAt:'2026-11-20T07:00:00.000Z',expiresAt:'2026-11-21T07:00:00.000Z',timeLabel:'Time not published'})]),now:'2026-11-21T06:59:59.999Z',fixedTime:true,timeZone:'Asia/Tokyo'},async({page})=>{
     await page.goto(origin+'/events.html');await count(page,1);
     await page.clock.setFixedTime(new Date('2026-11-21T07:00:00.000Z'));await refresh(page);await count(page,0);await fallback(page);
   }));
@@ -216,7 +232,7 @@ async function layoutBounds(page, width, selector) {
     const privateDetail=await visibleGatherings(page).allTextContents();assert.doesNotMatch(privateDetail.join(' '),/\b(?:[1-9]|1[0-2])(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\b|\$\d|\bages?\s+\d|\b\d{2,5}\s+[A-Za-z]+\s+(?:Street|St\.|Avenue|Ave\.|Drive|Dr\.|Road|Rd\.)\b/i);
   }));
   for(const [boundary,remaining] of [['2026-11-21T07:00:00.000Z',1],['2026-12-20T07:00:00.000Z',0]]) {
-    await run('gathering date-only expiry at '+boundary,()=>using({now:new Date(Date.parse(boundary)-1).toISOString(),timeZone:'Pacific/Auckland'},async({page})=>{
+    await run('gathering date-only expiry at '+boundary,()=>using({now:new Date(Date.parse(boundary)-1).toISOString(),fixedTime:true,timeZone:'Pacific/Auckland'},async({page})=>{
       await page.goto(origin+'/events.html');await settled(page);assert.equal(await visibleGatherings(page).count(),remaining+1);
       await page.clock.setFixedTime(new Date(boundary));await page.clock.fastForward(60001);assert.equal(await visibleGatherings(page).count(),remaining);
     }));

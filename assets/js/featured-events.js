@@ -75,12 +75,14 @@
     }
     paragraph(details, '', 'Confirm the latest details, prices and availability with the organizer.');
     card.appendChild(details);
-    var link = element('a', 'fep-event-link', 'Organizer details');
-    link.href = safeUrl(event.href);
+    var href = safeUrl(event.href);
+    var sourceFallback = href === CALENDAR_URL;
+    var link = element('a', 'fep-event-link', sourceFallback ? 'FindEveryPark calendar' : 'Organizer details');
+    link.href = href;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.dataset.focusKey = 'organizer';
-    link.setAttribute('aria-label', 'Organizer details for ' + event.title + ' (opens in a new tab)');
+    link.setAttribute('aria-label', (sourceFallback ? 'FindEveryPark calendar' : 'Organizer details for ' + event.title) + ' (opens in a new tab)');
     card.appendChild(link);
     return card;
   }
