@@ -1003,3 +1003,37 @@ p {
     border-radius: 20px;
   }
 }
+
+/* Scoped, dependency-free event previews. FEP supplies data, not styles/scripts. */
+.fep-event-grid, .gathering-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.2rem;
+}
+.gathering-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fep-event-card, .gathering-card { min-width: 0; }
+.fep-event-card { display: flex; flex-direction: column; gap: 0.8rem; }
+.fep-event-card h3, .gathering-card h3 { font-size: 1.4rem; line-height: 1.2; margin: 0; overflow-wrap: anywhere; }
+.fep-event-card p { margin: 0; overflow-wrap: anywhere; }
+.fep-event-city { color: var(--accent-2); font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.fep-event-date, .fep-event-cost { font-weight: 750; }
+.fep-event-time, .fep-event-location, .fep-event-registration, .fep-event-details { font-size: 0.92rem; }
+.fep-event-registration { border-left: 3px solid var(--line); padding-left: 0.8rem; }
+.fep-event-details { border-top: 1px solid var(--line); padding-top: 0.4rem; }
+.fep-event-details summary { cursor: pointer; min-height: 44px; padding: 0.6rem 0; font-weight: 700; }
+.fep-event-details p { margin: 0.3rem 0 0.6rem; }
+.fep-event-card .fep-event-link { margin-top: auto; display: inline-flex; align-items: center; min-height: 44px; text-decoration: underline; text-underline-offset: 0.2em; overflow-wrap: anywhere; }
+.fep-feed-status { color: var(--muted); }
+.fep-feed-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+.fep-feed-actions button { font: inherit; cursor: pointer; }
+.fep-feed-actions [hidden] { display: none; }
+.gathering-card { display: flex; flex-direction: column; gap: 0.8rem; background: var(--surface-warm); }
+.gathering-card p { margin: 0; }
+@media (max-width: 1050px) {
+  .fep-event-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .fep-event-grid, .gathering-grid { grid-template-columns: 1fr; }
+  .fep-feed-actions { align-items: stretch; flex-direction: column; }
+  .fep-feed-actions a, .fep-feed-actions button { width: 100%; text-align: center; justify-content: center; white-space: normal; }
+}

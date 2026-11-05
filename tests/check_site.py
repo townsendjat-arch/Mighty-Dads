@@ -121,7 +121,10 @@ class SiteChecks(unittest.TestCase):
         self.assertNotIn('June 13, 2026', events)
         self.assertNotIn('Every Tuesday This Summer', events)
         self.assertNotIn('Saturday Mornings', events)
-        self.assertIn('No current Mighty Dads events are listed here.', events)
+        self.assertNotIn('No current Mighty Dads events are listed here.', events)
+        self.assertIn('Mighty Dads Gatherings', events)
+        self.assertIn('Poker Night', events)
+        self.assertIn('Christmas Party', events)
 
 
 if __name__ == '__main__':

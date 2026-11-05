@@ -35,19 +35,41 @@
       </div>
     </section>
 
-    <section class="section featured-events-section">
+    <section class="section featured-events-section fep-picks-section" data-fep-events data-limit="5" aria-labelledby="community-event-heading">
       <div class="container">
         <div class="section-heading left">
-          <p class="eyebrow">Local outings</p>
-          <h2>Featured Events</h2>
-          <p>No current Mighty Dads events are listed here. Past summer listings have been cleared so you don’t plan around an outdated date.</p>
+          <p class="eyebrow">Curated by FindEveryPark</p>
+          <h2 id="community-event-heading" tabindex="-1">Community events</h2>
+          <p>Up to five current family outings around the Front Range. These events are run by their listed organizers.</p>
         </div>
-        <div class="story-card">
-          <p>Looking for something to do? Explore the options below, or find a local dad group and check its upcoming meetups.</p>
-          <a class="btn btn-small" href="dad-groups.html">Explore Dad Groups</a>
+        <p class="fep-feed-status" data-feed-status role="status">Browse current family outings on the FindEveryPark calendar.</p>
+        <div class="fep-event-grid" data-event-grid></div>
+        <div class="fep-feed-actions">
+          <a class="btn" href="https://findeverypark.com/events.html" target="_blank" rel="noopener noreferrer">See the full FindEveryPark calendar</a>
+          <button class="btn btn-secondary" type="button" data-feed-retry hidden>Try loading events again</button>
         </div>
+        <noscript><p>Event previews need JavaScript. The full calendar link is always available.</p></noscript>
       </div>
     </section>
+
+    <section class="section gatherings-section" data-gatherings aria-labelledby="gatherings-heading">
+      <div class="container">
+        <div class="section-heading left">
+          <p class="eyebrow">Our community</p>
+          <h2 id="gatherings-heading">Mighty Dads Gatherings</h2>
+          <p>Dates are in Mountain time. Event times and other details are not yet confirmed.</p>
+          <p data-gathering-status role="status">Gathering dates and details will appear here when available.</p>
+        </div>
+        <div class="gathering-grid" data-gathering-grid></div>
+        <noscript><p>Enable JavaScript to see upcoming gathering dates. Details will be shared when confirmed.</p></noscript>
+      </div>
+    </section>
+    <script type="application/json" id="gatherings-data">
+      [
+        {"id":"poker-night-2026-11-20","title":"Poker Night","date":"2026-11-20","dateLabel":"Friday, November 20, 2026","expiresAt":"2026-11-21T00:00:00-07:00"},
+        {"id":"christmas-party-2026-12-19","title":"Christmas Party","date":"2026-12-19","dateLabel":"Saturday, December 19, 2026","expiresAt":"2026-12-20T00:00:00-07:00"}
+      ]
+    </script>
 
     <section class="section section-alt">
       <div class="container narrow">
@@ -111,5 +133,6 @@
       </div>
     </div>
   </footer>
+  <script src="assets/js/featured-events.js" defer></script>
 </body>
 </html>

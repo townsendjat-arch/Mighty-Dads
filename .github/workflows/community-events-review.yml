@@ -1,0 +1,49 @@
+name: Community events review
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+jobs:
+  browser:
+    if: github.head_ref == 'review/findeverypark-events-2026'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: mcr.microsoft.com/playwright:v1.62.1-noble
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Read immutable FindEveryPark candidate
+        id: feed
+        run: |
+          node -e 'const f = require("./tests/feed-source.json"); if (!/^[a-f0-9]{40}$/.test(f.revision) || /^0+$/.test(f.revision)) throw new Error("Pin the reviewed FindEveryPark commit"); require("node:fs").appendFileSync(process.env.GITHUB_OUTPUT, "revision=" + f.revision + "\n");'
+      - uses: actions/checkout@v6
+        with:
+          repository: townsendjat-arch/findeverypark
+          ref: ${{ steps.feed.outputs.revision }}
+          path: .review-feed
+          persist-credentials: false
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+        env:
+          FEED_FIXTURE_PATH: .review-feed/data/events/community-feed.v1.json
+      - run: npm run test:browser
+        env:
+          BROWSER: ${{ matrix.browser }}
+          FEED_FIXTURE_PATH: .review-feed/data/events/community-feed.v1.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mighty-dads-events-${{ matrix.browser }}
+          path: test-results/
+          retention-days: 14
