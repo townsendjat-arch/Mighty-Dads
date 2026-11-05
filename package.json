@@ -1,0 +1,13 @@
+{
+  "name": "mighty-dads-events-review",
+  "private": true,
+  "scripts": {
+    "test": "python3 tests/check_site.py && node --test tests/community-events.test.js",
+    "test:browser": "node tests/community-events.browser.js",
+    "test:review": "npm test && npm run test:browser"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "playwright": "1.62.1"
+  }
+}
