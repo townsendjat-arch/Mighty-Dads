@@ -1,6 +1,6 @@
 # Gatherings: private RSVP setup proposal
 
-Research checked November 9, 2026. This document describes proposed future operations, not an activated service or a security certification. Current website form is deliberately disconnected: no submission endpoint, no RSVP storage, and no real requests accepted. Review and approval are required before setup or collection.
+Research checked November 9, 2026. This document describes proposed future operations, not an activated service or a security certification. Current website form is deliberately disconnected: no active submission endpoint, no RSVP storage, and no real requests accepted. Review and approval are required before setup or collection.
 
 ## Recommended first release: Formspree intake, manual organizer approval
 
@@ -62,7 +62,7 @@ Use synthetic test data, never real guests or home addresses, for initial verifi
 - Check mobile/desktop, keyboard navigation, labels, error announcements, zoom, contrast and screen-reader flow.
 - Confirm private email delivery, revocation workflow, retention deletion procedure and quota behavior before enabling the site form.
 
-No provider account, event, submission, email, or integration was created as part of this research.
+The owner supplied a dedicated Formspree endpoint on November 9. No service settings were changed, and no submission or email was sent as part of this implementation.
 
 ## This draft and regression checks
 
@@ -73,3 +73,22 @@ The form intentionally has disabled fields, no field names, no endpoint, and no 
 Run `npm ci`, `npx playwright install --with-deps chromium webkit`, `npm test`, and `npm run test:browser`. The browser suite covers 320px, 390px, and 1280px widths in Chromium and WebKit, automated accessibility, navigation, no-JavaScript fallback, blocked submission and no browser storage. Screenshots are written locally to ignored `test-results/`; CI retains them seven days. Automated accessibility does not replace a screen-reader and actual-device check.
 
 The GitHub workflow only tests and stores screenshots. It does not deploy. Merge, deployment, provider activation, real submissions, emails and private venue distribution require separate approval.
+
+
+## November 9: prepared Formspree adapter (still disabled)
+
+The approved endpoint is `https://formspree.io/f/xrppngnk`. The intended notification mailbox is `jason@mightydads.org`. These are configuration requirements, **not verified dashboard settings or a delivery guarantee**. Configure and verify the Email action recipient inside Formspree; do not use a client-controlled recipient field. Endpoint replacement later requires editing the adapter configuration and rerunning tests, not rebuilding the website.
+
+`assets/js/gatherings-rsvp.js` now prepares the data contract, allowlisted payload, field validation, event cutoff at 5:30 PM Mountain, CAPTCHA-token requirement, honeypot rejection, duplicate-click guard, timeout, provider errors and receipt-only success text. It has no default network transport, exports `enabled: false`, and is deliberately **not loaded or bound on the public page**. The HTML remains disabled with no field names/action and CSP `form-action 'none'`. This is integration preparation, not a functioning public intake form. No query parameter or visitor switch enables it. Tests inject only synthetic in-memory responses; no request reaches Formspree.
+
+A missing CAPTCHA token is rejected locally, but genuine token verification and every security-relevant validation must also happen at the provider. Client code cannot secure a public endpoint. The code makes no claim that arbitrary field validation, quota handling, domain restrictions, Turnstile, or server-side closed-event rejection are configured. Party-size capacity remains a manual organizer decision, not an invented numeric limit. Close intake at the listed start time unless the organizer approves another cutoff.
+
+### Exact activation procedure, subject to separate approval
+
+1. Owner signs into the dedicated Formspree form, verifies ownership and notification recipient, MFA, access, quota, domain restriction, spam filtering and Turnstile settings. Confirm server validation capabilities; if unavailable, retain manual review and agree limitations before activation. Never place provider secrets in GitHub.
+2. Approve privacy/retention text and organizer access; set no automatic attendee approval, location email, newsletter enrollment or public guest list. Pending notifications and receipts must contain no venue.
+3. Approve a controlled synthetic real-submission test separately. Confirm inbox delivery, spam folder, dashboard access, CAPTCHA failures, invalid fields, failure states and quota behavior. Nothing in the automated suite proves email delivery. Keep the public form disabled during this test.
+4. In a separately reviewed change, bind the adapter to labeled form controls and accessible field errors/status region, install a live fetch transport and approved Turnstile site key, restrict `connect-src` to the required provider domains, and deliberately review CSP and no-JavaScript fallback. Re-run browser and accessibility checks on that actual bound form. Do not merely flip `enabled` and declare the integration complete.
+5. Only after testing and explicit release approval, enable collection, merge and deploy. Roll back by restoring the disabled page/config. Organizer manually verifies the adult email and approves each guest before privately sharing venue details; Formspree receipt is never approval.
+
+Current checks: 11 static checks, 9 adapter unit tests, and browser regression coverage in both engines including injected mock success/rejection/validation/disabled states. Public UI behavior remains unchanged. Remaining actual-device/screen-reader and real-provider/email checks are not replaced by mocks.

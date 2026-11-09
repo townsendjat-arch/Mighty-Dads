@@ -16,6 +16,23 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new
    const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(results.violations.map(v=>({id:v.id,nodes:v.nodes.length})),[]);checks++;
    // Even programmatic form submission cannot transmit; CSP blocks it.
    await page.evaluate(()=>{window.blockedSubmission=false;document.addEventListener('securitypolicyviolation',e=>{if(e.violatedDirective==='form-action')window.blockedSubmission=true;});document.querySelector('form').requestSubmit();});await page.waitForFunction(()=>window.blockedSubmission===true);assert.equal(page.url(),base+'/events.html');assert.deepEqual(external,[]);checks++;
+   // Exercise the prepared adapter with injected in-memory responses only.
+   await page.addScriptTag({content:fs.readFileSync(path.join(root,'assets/js/gatherings-rsvp.js'),'utf8')});
+   const adapter = await page.evaluate(async()=>{
+    const api=window.GatheringsRSVP;
+    const input={event:'poker-2026',name:'Test Adult',email:'test@example.invalid',guests:'2',message:''};
+    let calls=0; const transport=async()=>{calls++;return {ok:true,json:async()=>({ok:true})};};
+    const disabled=await api.createClient({transport})(input,'test');
+    const before=calls;
+    const settings={...api.config,enabled:true};const now=()=>Date.parse('2026-11-09T12:00:00-07:00');
+    const submit=api.createClient({settings,transport,now});
+    const invalid=await submit({...input,email:'invalid'},'test');
+    const captcha=await submit(input);
+    const success=await submit(input,'synthetic-token');
+    const failure=await api.createClient({settings,now,transport:async()=>({ok:false,status:429})})(input,'test');
+    return {disabled:disabled.state,before,invalid:invalid.state,captcha:captcha.state,success:success.state,message:success.message,failure:failure.state,calls};
+   });
+   assert.deepEqual(adapter,{disabled:'disabled',before:0,invalid:'invalid',captcha:'invalid',success:'success',message:'Request received; attendance is not confirmed. An organizer will review your request. No location is included in this receipt.',failure:'error',calls:1});assert.deepEqual(external,[]);checks++;
    // Clear the browser's canceled navigation state after the CSP probe.
    await page.goto(base+'/events.html');
    assert.equal(await page.evaluate(()=>localStorage.length+sessionStorage.length),0);checks++;

@@ -1,0 +1,16 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { config, validate, createClient } = require('../assets/js/gatherings-rsvp');
+const now = () => Date.parse('2026-11-09T12:00:00-07:00');
+const input = { event: 'poker-2026', name: 'Test Adult', email: 'test@example.invalid', guests: '2', message: '' };
+const ok = async () => ({ ok: true, redirected: false, json: async () => ({ ok: true }) });
+const client = transport => createClient({ settings: { ...config, enabled: true }, transport, now, timeoutMs: 20 });
+test('production config stays disabled and sends nothing', async () => { let calls=0; assert.equal((await createClient({transport:()=>{calls++;}})(input,'test')).state,'disabled'); assert.equal(calls,0); assert.equal(config.endpoint,'https://formspree.io/f/xrppngnk'); assert.ok(Object.isFrozen(config)); });
+test('no transport means fail closed even with test settings',async()=>assert.equal((await createClient({settings:{...config,enabled:true}})(input,'test')).state,'disabled'));
+test('required fields, safe integer count, limits and allowlisted events',()=>{for(const [field,values] of Object.entries({event:['','unknown'],name:['',' '.repeat(2),'a'.repeat(101)],email:['','bad','a'.repeat(255)],guests:['','0','-1','1.5','1e2','9007199254740992'],message:['x'.repeat(1001)]})) for(const value of values) assert.ok(validate({...input,[field]:value},now()).errors[field]); assert.deepEqual(validate(input,now()).errors,{});});
+test('Mountain-time cutoff at event start',()=>{assert.ok(!validate(input,Date.parse('2026-11-21T00:29:59Z')).errors.event);assert.ok(validate(input,Date.parse('2026-11-21T00:30:00Z')).errors.event);});
+test('captcha and honeypot fail without transmission',async()=>{let calls=0;const send=client(async()=>{calls++;return ok();});assert.equal((await send(input)).state,'invalid');assert.equal((await send({...input,_gotcha:'bot'},'test')).state,'invalid');assert.equal(calls,0);});
+test('success is receipt only; only allowlisted data is sent',async()=>{let payload;const send=client(async(url,options)=>{assert.equal(url,config.endpoint);payload=JSON.parse(options.body);return ok();});const result=await send({...input,privateField:'do not forward'},'synthetic-token');assert.equal(result.state,'success');assert.match(result.message,/attendance is not confirmed/);assert.equal(payload.privateField,undefined);assert.equal(payload['cf-turnstile-response'],'synthetic-token');});
+test('rejection, quota, malformed and redirect are not success',async()=>{for(const response of [{ok:false,status:422},{ok:false,status:429},{ok:false,status:500},{ok:true,redirected:true},{ok:true,json:async()=>({})},{ok:true,json:async()=>{throw Error();}}]) assert.equal((await client(async()=>response)(input,'test')).state,'error');});
+test('network failures and timeout are recoverable without automatic retry',async()=>{assert.equal((await client(async()=>{throw Error('offline');})(input,'test')).state,'error');assert.equal((await client(()=>new Promise(()=>{}))(input,'test')).state,'error');});
+test('repeated clicks do not duplicate requests',async()=>{let release;const send=client(()=>new Promise(r=>release=r));const first=send(input,'test');assert.equal((await send(input,'test')).state,'busy');release(await ok());assert.equal((await first).state,'success');});
