@@ -15,7 +15,9 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);checks++;
    const results=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(results.violations.map(v=>({id:v.id,nodes:v.nodes.length})),[]);checks++;
    // Even programmatic form submission cannot transmit; CSP blocks it.
-   await page.evaluate(()=>document.querySelector('form').requestSubmit());await page.waitForTimeout(100);assert.equal(page.url(),base+'/events.html');assert.deepEqual(external,[]);checks++;
+   await page.evaluate(()=>{window.blockedSubmission=false;document.addEventListener('securitypolicyviolation',e=>{if(e.violatedDirective==='form-action')window.blockedSubmission=true;});document.querySelector('form').requestSubmit();});await page.waitForFunction(()=>window.blockedSubmission===true);assert.equal(page.url(),base+'/events.html');assert.deepEqual(external,[]);checks++;
+   // Clear the browser's canceled navigation state after the CSP probe.
+   await page.goto(base+'/events.html');
    assert.equal(await page.evaluate(()=>localStorage.length+sessionStorage.length),0);checks++;
    await page.locator('#gatherings').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,`test-results/${name}-${width}.png`),fullPage:true});
    await page.goto(base+'/index.html');await page.getByRole('link',{name:'See gathering details'}).click();assert.equal(new URL(page.url()).hash,'#gatherings');await page.goBack();assert.match(page.url(),/index.html$/);checks++;
