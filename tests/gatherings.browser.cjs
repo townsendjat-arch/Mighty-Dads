@@ -8,7 +8,7 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new
  try {for(const [name,type] of [['chromium',chromium],['webkit',webkit]].filter(([name])=>!process.env.BROWSER || process.env.BROWSER===name)) {
   const browser=await type.launch(name==='chromium' && process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{});
   try {for(const width of [320,390,1280]) {
-   const page=await browser.newPage({viewport:{width,height:900}});const external=[];page.on('request',r=>{if(!r.url().startsWith(base))external.push(r.url());});
+   const context=await browser.newContext({viewport:{width,height:900}});const page=await context.newPage();const external=[];page.on('request',r=>{if(!r.url().startsWith(base))external.push(r.url());});
    await page.goto(base+'/events.html');await page.locator('.gathering-flyer').scrollIntoViewIfNeeded();await page.waitForFunction(()=>Array.from(document.images).every(i=>i.complete));
    assert.equal(await page.locator('#gatherings article').count(),2);checks++;
    assert.equal(await page.locator('#gathering-request :is(input,select,textarea)').count(),5);assert.equal(await page.locator('#gathering-request :is(input,select,textarea):disabled').count(),5);checks++;
@@ -19,7 +19,7 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new
    assert.equal(await page.evaluate(()=>localStorage.length+sessionStorage.length),0);checks++;
    await page.locator('#gatherings').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,`test-results/${name}-${width}.png`),fullPage:true});
    await page.goto(base+'/index.html');await page.getByRole('link',{name:'See gathering details'}).click();assert.equal(new URL(page.url()).hash,'#gatherings');await page.goBack();assert.match(page.url(),/index.html$/);checks++;
-   const nojs=await browser.newContext({javaScriptEnabled:false,viewport:{width,height:900}});const p=await nojs.newPage();await p.goto(base+'/events.html');assert.equal(await p.locator('#gathering-request input:disabled').count(),3);checks++;await nojs.close();await page.close();
+   const nojs=await browser.newContext({javaScriptEnabled:false,viewport:{width,height:900}});const p=await nojs.newPage();await p.goto(base+'/events.html');assert.equal(await p.locator('#gathering-request input:disabled').count(),3);checks++;await nojs.close();await context.close();
    console.log(`PASS ${name} ${width}px: layout, cards, disabled form, axe, blocked submit, no storage, navigation, no JS`);
   }}finally{await browser.close();}
  } console.log(`PASS ${checks} browser checks`);
