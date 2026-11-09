@@ -77,7 +77,7 @@ The GitHub workflow only tests and stores screenshots. It does not deploy. Merge
 
 ## November 9: prepared Formspree adapter (still disabled)
 
-The approved endpoint is `https://formspree.io/f/xrppngnk`. The intended notification mailbox is `jason@mightydads.org`. These are configuration requirements, **not verified dashboard settings or a delivery guarantee**. Configure and verify the Email action recipient inside Formspree; do not use a client-controlled recipient field. Endpoint replacement later requires editing the adapter configuration and rerunning tests, not rebuilding the website.
+The approved endpoint is `https://formspree.io/f/xrppngnk`. The intended notification mailbox is the owner-approved organizer mailbox shared privately. These are configuration requirements, **not verified dashboard settings or a delivery guarantee**. Configure and verify the Email action recipient inside Formspree; do not use a client-controlled recipient field. Endpoint replacement later requires editing the adapter configuration and rerunning tests, not rebuilding the website.
 
 `assets/js/gatherings-rsvp.js` now prepares the data contract, allowlisted payload, field validation, event cutoff at 5:30 PM Mountain, CAPTCHA-token requirement, honeypot rejection, duplicate-click guard, timeout, provider errors and receipt-only success text. It has no default network transport, exports `enabled: false`, and is deliberately **not loaded or bound on the public page**. The HTML remains disabled with no field names/action and CSP `form-action 'none'`. This is integration preparation, not a functioning public intake form. No query parameter or visitor switch enables it. Tests inject only synthetic in-memory responses; no request reaches Formspree.
 
