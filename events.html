@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Front Range Dad-Friendly Events | Mighty Dads</title>
-  <meta name="description" content="Find dad-friendly family events across Colorado's Front Range, including movies in the park, concerts, fairs, festivals, free activities, and weekend outings." />
+  <title>Gatherings &amp; Family Events | Mighty Dads</title>
+  <meta http-equiv="Content-Security-Policy" content="form-action 'none'" />
+  <meta name="description" content="Mighty Dads gatherings and family outings in Colorado. See upcoming dates and how private, organizer-approved invitations will work." />
   <link rel="canonical" href="https://www.mightydads.org/events.html" />
   <link rel="stylesheet" href="styles.css" />
 </head>
@@ -30,22 +31,77 @@
     <section class="page-hero">
       <div class="container narrow">
         <p class="eyebrow">Events</p>
-        <h1>Front Range Dad-Friendly Events</h1>
-        <p class="lead">Find ideas for family-friendly outings across the Front Range. For more local options, head to FindEveryPark and confirm current details with each organizer.</p>
+        <h1>Gatherings &amp; Family Events</h1>
+        <p class="lead">Connect with other dads at a Mighty Dads gathering, or explore community outings across the Front Range. Private gathering locations are shared only with approved guests.</p>
+        <p><a href="#gatherings">See gatherings</a> · <a href="#request-invitation">Invitation requests</a></p>
       </div>
     </section>
 
-    <section class="section featured-events-section">
+    <section class="section featured-events-section" id="gatherings" aria-labelledby="gatherings-title">
       <div class="container">
         <div class="section-heading left">
-          <p class="eyebrow">Local outings</p>
-          <h2>Featured Events</h2>
-          <p>No current Mighty Dads events are listed here. Past summer listings have been cleared so you don’t plan around an outdated date.</p>
+          <p class="eyebrow">Our community</p>
+          <h2 id="gatherings-title">Mighty Dads Gatherings</h2>
+          <p>Save the dates. Requesting an invitation will not guarantee a place; an organizer must approve each request.</p>
         </div>
-        <div class="story-card">
-          <p>Looking for something to do? Explore the options below, or find a local dad group and check its upcoming meetups.</p>
-          <a class="btn btn-small" href="dad-groups.html">Explore Dad Groups</a>
+        <div class="gathering-grid">
+          <article class="story-card gathering-card" aria-labelledby="poker-title">
+            <p class="eyebrow">Dads’ night</p>
+            <h3 id="poker-title">Poker Night</h3>
+            <img class="gathering-flyer" src="assets/poker-night-2026.png" alt="Mighty Dads Poker Night flyer: Friday, November 20 at 5:30 PM" width="1254" height="1254" loading="lazy">
+            <p><time datetime="2026-11-20T17:30:00-07:00">Friday, November 20, 2026 · 5:30 PM</time><br>Mountain time</p>
+            <p><strong>General location:</strong> Aurora, Colorado</p>
+            <p>A night to connect with other dads around the poker table.</p>
+            <p>Exact location shared privately with approved guests only.</p>
+            <a class="btn btn-small" href="#request-invitation">About invitation requests</a>
+          </article>
+          <article class="story-card gathering-card" aria-labelledby="christmas-title">
+            <p class="eyebrow">Families together</p>
+            <h3 id="christmas-title">Family Christmas Party</h3>
+            <p><time datetime="2026-12-19T17:30:00-07:00">Saturday, December 19, 2026 · 5:30 PM</time><br>Mountain time</p>
+            <p><strong>General location:</strong> To be confirmed</p>
+            <p>Celebrate the season with the Mighty Dads community.</p>
+            <p>Exact location shared privately with approved guests only.</p>
+            <a class="btn btn-small" href="#request-invitation">About invitation requests</a>
+          </article>
         </div>
+      </div>
+    </section>
+
+    <section class="section section-alt" id="request-invitation" aria-labelledby="request-title">
+      <div class="container narrow">
+        <h2 id="request-title">Request an invitation</h2>
+        <p id="request-status" class="disclaimer-box"><strong>Invitation requests are not open yet.</strong> This form is a preview only. Its fields are disabled, and no information can be submitted.</p>
+        <p id="request-privacy">When requests open, an adult can request places for their group. Please do not include children’s names, home addresses, or sensitive information. Guest information will not be listed publicly.</p>
+        <form id="gathering-request" aria-describedby="request-status request-privacy" autocomplete="off">
+          <fieldset disabled>
+            <legend>Invitation request details (not accepting submissions)</legend>
+            <label for="gathering-choice">Gathering (required)</label>
+            <select id="gathering-choice" required>
+              <option value="">Choose a gathering</option>
+              <option value="poker-2026">Poker Night · November 20</option>
+              <option value="christmas-2026">Family Christmas Party · December 19</option>
+            </select>
+            <label for="adult-name">Adult name (required)</label>
+            <input id="adult-name" type="text" maxlength="100" required>
+            <label for="adult-email">Email (required)</label>
+            <input id="adult-email" type="email" maxlength="254" required>
+            <label for="guest-count">Total people in your group, including you (required)</label>
+            <input id="guest-count" type="number" min="1" step="1" required aria-describedby="guest-help">
+            <p id="guest-help">A headcount only. Do not provide children’s names or ages.</p>
+            <label for="request-message">Message (optional)</label>
+            <textarea id="request-message" rows="4" maxlength="1000" aria-describedby="message-help"></textarea>
+            <p id="message-help">Up to 1,000 characters. Please leave out private or sensitive information.</p>
+            <button class="btn" type="button" disabled>Requests not open yet</button>
+          </fieldset>
+        </form>
+        <h3>How approval will work</h3>
+        <ol>
+          <li>An adult requests an invitation when registration opens.</li>
+          <li>An organizer reviews the request and confirms space. A receipt is not an approval.</li>
+          <li>Only approved guests receive the exact location privately by email.</li>
+        </ol>
+        <p>No request details or guest lists will appear on this website.</p>
       </div>
     </section>
 

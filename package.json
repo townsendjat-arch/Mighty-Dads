@@ -1,0 +1,1 @@
+{"name":"mighty-dads","private":true,"scripts":{"test":"python3 tests/check_site.py && python3 tests/check_gatherings.py","test:browser":"node tests/gatherings.browser.cjs"},"devDependencies":{"playwright":"1.62.1","@axe-core/playwright":"4.10.2"}}
