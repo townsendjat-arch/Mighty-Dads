@@ -1003,3 +1003,16 @@ p {
     border-radius: 20px;
   }
 }
+
+/* Gatherings: public summaries only; registration remains disabled until approved. */
+.gathering-grid { align-items: start; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; }
+.gathering-card { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.gathering-card .btn { margin-top: auto; }
+.gathering-flyer { width: 100%; height: auto; border-radius: 12px; margin-bottom: 1.25rem; }
+#gathering-request fieldset { border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem; min-width: 0; }
+#gathering-request legend { font-weight: 700; padding: 0 .3rem; }
+#gathering-request label { display: block; font-weight: 600; margin: 1rem 0 .35rem; }
+#gathering-request input, #gathering-request select, #gathering-request textarea { width: 100%; min-height: 44px; font: inherit; padding: .7rem; border: 1px solid var(--muted); border-radius: 6px; }
+#gathering-request :disabled { color: var(--muted); background: var(--surface-soft); opacity: 1; cursor: not-allowed; }
+#gathering-request p { font-size: .9rem; margin-top: .4rem; }
+@media (max-width: 640px) { .gathering-grid { grid-template-columns: 1fr; } }
