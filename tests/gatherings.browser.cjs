@@ -19,7 +19,7 @@ const server=http.createServer((req,res)=>{const pathname=decodeURIComponent(new
    // Clear the browser's canceled navigation state after the CSP probe.
    await page.goto(base+'/events.html');
    assert.equal(await page.evaluate(()=>localStorage.length+sessionStorage.length),0);checks++;
-   await page.locator('#gatherings').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(root,`test-results/${name}-${width}.png`),fullPage:true});
+   await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await page.waitForTimeout(100);await page.screenshot({path:path.join(root,`test-results/${name}-${width}.png`),fullPage:true});
    await page.goto(base+'/index.html');await page.getByRole('link',{name:'See gathering details'}).click();assert.equal(new URL(page.url()).hash,'#gatherings');await page.goBack();assert.match(page.url(),/index.html$/);checks++;
    const nojs=await browser.newContext({javaScriptEnabled:false,viewport:{width,height:900}});const p=await nojs.newPage();await p.goto(base+'/events.html');assert.equal(await p.locator('#gathering-request input:disabled').count(),3);checks++;await nojs.close();await context.close();
    console.log(`PASS ${name} ${width}px: layout, cards, disabled form, axe, blocked submit, no storage, navigation, no JS`);
